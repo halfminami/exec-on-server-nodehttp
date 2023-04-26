@@ -12,14 +12,15 @@ window.addEventListener("DOMContentLoaded", () => {
           if (ret.exitcode == 0) {
             out.textContent = ret.stdout;
           } else {
-            out.textContent = "error.";
+            out.textContent = ret.stderr || "error.";
           }
-          console.log(ret);
+          return ret;
         })
         .catch((err) => {
           out.textContent = "error.";
-          console.log(err);
-        });
+          return err;
+        })
+        .then((ret) => console.log(ret));
     });
   }
 });

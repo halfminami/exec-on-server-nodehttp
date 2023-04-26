@@ -1,5 +1,6 @@
 import { CMD_POST, CMD_RESPONSE } from "../../global.js";
 import * as childprocess from "node:child_process";
+
 /** commands that are recognized */
 const cmdDict: { [key: string]: { cmd: string; arg: string[] } } = {
   echo: { cmd: "echo", arg: [] },

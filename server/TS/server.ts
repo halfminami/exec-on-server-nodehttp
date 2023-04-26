@@ -1,10 +1,11 @@
-import { CMD_POST, CMD_RESPONSE } from "../../global.js";
 import * as settings from "./settings.js";
 import { spawnChildProcess } from "./exec.js";
 import * as http from "node:http";
 import * as fspromises from "node:fs/promises";
 import * as path from "node:path";
+import { CMD_RESPONSE } from "../../global.js";
 const rootDir = "./public";
+
 /**
  * static file server and server command execution
  * @see {@link https://developer.mozilla.org/en-US/docs/Learn/Server-side/Node_server_without_framework}
@@ -15,14 +16,19 @@ const server = http.createServer(function (req, res) {
   req.on("data", (chunk) => {
     postdata += chunk;
   });
+
   req.on("end", () => {
-    let filePath = (req.url || "/").split("?")[0];
-    // "/exec"
+    let filePath = (req.url || "/").replace(/\?.*/g, "");
+
+    // "/exec" execute command
     if (filePath == "/exec") {
-      new Promise((resolve) => {
-        resolve(JSON.parse(postdata));
+      new Promise((resolve: (value: CMD_RESPONSE) => void, reject) => {
+        const postjson = JSON.parse(postdata);
+        spawnChildProcess(postjson)
+          .then((ret) => resolve(ret))
+          .catch((err) => reject(err));
       })
-        .then((postjson: any) => spawnChildProcess(postjson))
+
         .then((ret) => {
           res.writeHead(200, {
             "Content-Type": "application/json; charset=UTF-8",
@@ -31,6 +37,7 @@ const server = http.createServer(function (req, res) {
             settings.dateLog(req.method, req.url, ret.cmd, ret.exitcode)
           );
         })
+
         .catch((err) => {
           res.writeHead(500, {
             "Content-Type": "application/json; charset=UTF-8",
@@ -41,22 +48,39 @@ const server = http.createServer(function (req, res) {
         });
       return;
     }
+
     // parse url
     if (filePath.endsWith("/")) {
       filePath += "index.html";
     }
     filePath = rootDir + filePath;
+    let pathOK = true;
+    filePath = path.normalize(filePath);
+
+    if (!filePath.startsWith(path.normalize(rootDir))) {
+      pathOK = false;
+    }
+
     // static file server
     const ext = path.extname(filePath).toLowerCase();
     let contentType = settings.mimeTypes[ext] || "application/octet-stream";
     contentType += "; charset=UTF-8";
-    new Promise((resolve) =>
-      resolve(fspromises.readFile(filePath, { encoding: "utf-8" }))
-    )
+
+    new Promise((resolve, reject) => {
+      if (!pathOK) {
+        reject({ code: "ENOENT" });
+      }
+      fspromises
+        .readFile(filePath, { encoding: "utf-8" })
+        .then((content) => resolve(content))
+        .catch((err) => reject(err));
+    })
+
       .then((content) => {
         res.writeHead(200, { "Content-Type": contentType });
         res.end(content, "utf-8", () => settings.dateLog(req.method, req.url));
       })
+
       .catch((err) => {
         if (err.code == "ENOENT") {
           res.writeHead(404);
@@ -66,7 +90,7 @@ const server = http.createServer(function (req, res) {
         } else {
           res.writeHead(500);
           res.end("sorry error\n", "utf-8", () =>
-            settings.dateLog(req.method, req.url, err)
+            settings.dateLog(req.method, req.url, err.code)
           );
         }
       });

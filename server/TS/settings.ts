@@ -1,5 +1,17 @@
 export const port = 8888;
 export const host = "127.0.0.1";
+
+export function dateLog(
+  method: string | undefined,
+  url: string | undefined,
+  ...info: any[]
+): void {
+  let log = `[${new Date().toTimeString()}]`;
+  log += ` ${method}: ${url}`;
+  info.forEach((str) => (log += ` [${str.toString()}]`));
+  console.log(log);
+  return;
+}
 export const mimeTypes: { [key: string]: string } = {
   ".html": "text/html",
   ".js": "text/javascript",
@@ -18,14 +30,3 @@ export const mimeTypes: { [key: string]: string } = {
   ".wasm": "application/wasm",
   ".txt": "text/plain",
 };
-export function dateLog(
-  method: string | undefined,
-  url: string | undefined,
-  ...info: any[]
-): void {
-  let log = `[${new Date().toTimeString()}]`;
-  log = ` ${method}: ${url}`;
-  info.forEach((str) => (log += ` [${str.toString()}]`));
-  console.log(log);
-  return;
-}
