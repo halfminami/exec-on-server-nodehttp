@@ -1,3 +1,6 @@
+/**
+ * @file execute command on server. specify what command to be executed
+ */
 import { CMD_POST, CMD_RESPONSE } from "../../global.js";
 import * as childprocess from "node:child_process";
 

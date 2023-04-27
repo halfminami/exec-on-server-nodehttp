@@ -1,3 +1,6 @@
+/**
+ * @file static file server and command execution using `node:http`
+ */
 import * as settings from "./settings.js";
 import { spawnChildProcess } from "./exec.js";
 import * as http from "node:http";
@@ -7,7 +10,7 @@ import { CMD_RESPONSE } from "../../global.js";
 const rootDir = "./public";
 
 /**
- * static file server and server command execution
+ * static file server
  * @see {@link https://developer.mozilla.org/en-US/docs/Learn/Server-side/Node_server_without_framework}
  */
 const server = http.createServer(function (req, res) {
